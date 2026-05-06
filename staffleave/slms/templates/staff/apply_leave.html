@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.staff-card { border-radius: 10px; }
+.staff-card .card-content { padding: 24px; }
+.staff-form-group { margin-bottom: 16px; }
+.staff-submit-btn { min-width: 170px; }
+.staff-note { background: #f5f7fa; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; }
+.staff-page-title { color: #1565c0; padding-top: 10px; padding-left: 10px; }
+.staff-btn-primary { background-color: #1565c0 !important; }
+.staff-btn-primary:hover { background-color: #0d47a1 !important; }
+.staff-submit-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    height: 42px;
+}
+</style>
+
+<main class="mn-inner">
+    <h5 class="staff-page-title">Apply For Leave</h5>
+    <div class="row">
+        <div class="middle-content">
+            <div class="row no-m-t no-m-b">
+                <div class="col s12 m12 l12">
+                    <div class="card invoices-card staff-card">
+                        <div class="card-content">
+                            <span class="card-title">Leave Request Form</span>
+                            <div class="staff-note">
+                                <p style="margin: 0 0 6px 0;"><strong>Monthly Limit:</strong> {{ monthly_limit }} day(s)</p>
+                                <p style="margin: 0 0 6px 0; color: #37474f;">{{ limit_message }}</p>
+                                <p style="margin: 0; color: #1565c0;"><strong>Note:</strong> {{ remaining_message }}</p>
+                            </div>
+                            <form method="POST" action="{% url 'staff_apply_leave_save' %}" enctype="multipart/form-data" id="leaveApplyForm">
+                        {% if messages %}
+                        {% for message in messages %}
+                         {% if message.tags == 'error' %}
+                       <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      {{message}}
+                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                     <span aria-hidden="true">&times;</span>
+                         </button>
+                          </div>
+                       {% endif %}
+                        {% endfor %}
+                       {% endif %}
+                           {% if messages %}
+                        {% for message in messages %}
+                         {% if message.tags == 'success' %}
+                       <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      {{message}}
+                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                     <span aria-hidden="true">&times;</span>
+                         </button>
+                          </div>
+                       {% endif %}
+                        {% endfor %}
+                       {% endif %}
+                           {% csrf_token %}
+                           <div class="form-group row staff-form-group">
+                               <label class="col-sm-2 col-form-label">Leave Type</label>
+                               <div class="col-sm-10">
+                                   
+                                   <select  class="form-control" name="leave_type"  required="True">
+                                    <option value="">Choose Leave Type</option>
+                                    <option value="Casual Leave">Casual Leave</option>
+                                    <option value="Earned Leave">Earned Leave</option>
+                                    <option value="Sick Leave">Sick Leave</option>
+                                    <option value="Maternity Leave">Maternity Leave</option>
+                                    <option value="Paternity Leave">Paternity Leave</option>
+
+                                   </select>
+                               </div>
+                           </div>
+                            <div class="form-group row staff-form-group">
+                               <label class="col-sm-2 col-form-label">From Date</label>
+                               <div class="col-sm-10">
+                                   <input type="date" class="form-control" name="from_date" id="from_date" min="{{ today_date }}" required="True">
+                               </div>
+                           </div>
+                           <div class="form-group row staff-form-group">
+                               <label class="col-sm-2 col-form-label">To Date</label>
+                               <div class="col-sm-10">
+                                   <input type="date" class="form-control" name="to_date" id="to_date" min="{{ today_date }}" required="True">
+                               </div>
+                           </div>
+                           <div class="form-group row staff-form-group">
+                               <label class="col-sm-2 col-form-label">Duration</label>
+                               <div class="col-sm-10">
+                                   <input type="number" min="1" class="form-control" name="duration_days" id="duration_days" placeholder="Enter leave duration in days" required="True">
+                                   <small id="duration_hint" style="color:#607d8b;">Duration must match selected date range.</small>
+                               </div>
+                           </div>
+                           <div class="form-group row staff-form-group">
+                               <label class="col-sm-2 col-form-label">Reason</label>
+                               <div class="col-sm-10">
+                                <textarea class="form-control" name="message" required="True" rows="5" cols="5"></textarea>
+                                
+                               </div>
+                           </div>
+                           <div class="form-group row">
+                               <div class="col-sm-12" style="display: flex; justify-content: center;">
+                                   <button type="submit" class="btn staff-btn-primary staff-submit-btn" style="padding: 10px 30px; font-weight: 600;">Apply Leave</button>
+                               </div>
+                           </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var fromDateInput = document.getElementById('from_date');
+    var toDateInput = document.getElementById('to_date');
+    var durationInput = document.getElementById('duration_days');
+    var durationHint = document.getElementById('duration_hint');
+
+    function calculateExpectedDuration() {
+        if (!fromDateInput.value || !toDateInput.value) {
+            return null;
+        }
+
+        var start = new Date(fromDateInput.value);
+        var end = new Date(toDateInput.value);
+        var dayMs = 24 * 60 * 60 * 1000;
+        var diff = Math.floor((end - start) / dayMs) + 1;
+        return diff > 0 ? diff : null;
+    }
+
+    function syncMinToDate() {
+        toDateInput.min = fromDateInput.value || "{{ today_date }}";
+    }
+
+    function updateDurationHint() {
+        var expected = calculateExpectedDuration();
+        if (!expected) {
+            durationHint.innerText = 'Duration must match selected date range.';
+            durationHint.style.color = '#607d8b';
+            return;
+        }
+        durationHint.innerText = 'Expected duration for selected dates: ' + expected + ' day(s)';
+        if (durationInput.value && parseInt(durationInput.value, 10) !== expected) {
+            durationHint.style.color = '#c62828';
+        } else {
+            durationHint.style.color = '#1565c0';
+        }
+    }
+
+    fromDateInput.addEventListener('change', function () {
+        syncMinToDate();
+        updateDurationHint();
+    });
+    toDateInput.addEventListener('change', updateDurationHint);
+    durationInput.addEventListener('input', updateDurationHint);
+});
+</script>
+{% endblock %}

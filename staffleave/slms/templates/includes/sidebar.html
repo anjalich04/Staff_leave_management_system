@@ -1,0 +1,120 @@
+{% load static %}
+<aside id="slide-out" class="side-nav white fixed">
+    {% if user.user_type == '1' %}
+    <div class="side-nav-wrapper">
+        <div class="sidebar-profile">
+            
+            <div class="sidebar-profile-image">
+                <img src="/{{user.profile_pic}}" class="circle" alt="">
+            </div>
+            <div class="sidebar-profile-info">
+          
+                    <p>{{ user.first_name }} {{ user.last_name }}</p>
+                    <span>({{ user.email }})</span>
+             
+            </div>
+        </div>
+   
+    <ul class="sidebar-menu collapsible collapsible-accordion" data-collapsible="accordion">
+        <li class="no-padding"><a class="waves-effect waves-grey" href="{% url 'admin_home' %}"><i class="material-icons">account_box</i>Dashboard</a></li>
+      
+<li class="no-padding"><a class="waves-effect waves-grey" href="{% url 'profile' %}"><i class="material-icons">account_circle</i>My Profile</a></li>
+        <li class="no-padding">
+            <a class="collapsible-header waves-effect waves-grey"><i class="material-icons">apps</i>Staff<i class="nav-drop-icon material-icons">keyboard_arrow_right</i></a>
+            <div class="collapsible-body">
+                <ul>
+                    <li><a href="{% url 'add_staff' %}">Add Staff</a></li>
+                    <li><a href="{% url 'view_staff' %}">Manange Staff</a></li>
+                </ul>
+            </div>
+        </li>
+        
+        <li class="no-padding"><a class="waves-effect waves-grey" href="{% url 'staff_leave_view_admin' %}"><i class="material-icons">event_note</i>Staff Leave</a></li>
+        <li class="no-padding"><a class="waves-effect waves-grey" href="{% url 'leave_type_list' %}"><i class="material-icons">category</i>Leave Types</a></li>
+   
+      <li class="no-padding">
+                    <a class="waves-effect waves-grey" href="{% url 'logout' %}"><i class="material-icons">exit_to_app</i>Sign Out</a>
+                </li>  
+                 
+     
+       
+    </ul>
+
+    {% else  %}
+    <style>
+        .staff-nav .waves-effect {
+            border-radius: 8px;
+            margin: 6px 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #37474f;
+            transition: all 0.25s ease;
+        }
+        .staff-nav .waves-effect:hover {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            transform: translateX(2px);
+        }
+        .staff-nav .waves-effect i {
+            color: #607d8b;
+        }
+        .staff-nav .waves-effect.active-staff-link {
+            background-color: #1976d2;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25);
+        }
+        .staff-nav .waves-effect.active-staff-link i {
+            color: #fff;
+        }
+    </style>
+
+
+    <div class="side-nav-wrapper">
+        <div class="sidebar-profile">
+            
+            <div class="sidebar-profile-image">
+                <img src="/{{user.profile_pic}}" class="circle" alt="">
+            </div>
+            <div class="sidebar-profile-info">
+          
+                    <p>{{ user.first_name }} {{ user.last_name }}</p>
+                    <span>({{ user.email }})</span>
+             
+            </div>
+        </div>
+   
+    <ul class="sidebar-menu collapsible collapsible-accordion staff-nav" data-collapsible="accordion">
+        <li class="no-padding"><a class="waves-effect waves-grey {% if request.path == '/Staff/Home' %}active-staff-link{% endif %}" href="{% url 'staff_home' %}"><i class="material-icons">dashboard</i>Dashboard</a></li>
+      
+<li class="no-padding"><a class="waves-effect waves-grey {% if request.path == '/Staff/Apply_Leave' %}active-staff-link{% endif %}" href="{% url 'staff_apply_leave' %}"><i class="material-icons">event_note</i>Apply Leave</a></li>
+<li class="no-padding"><a class="waves-effect waves-grey {% if request.path == '/Staff/Leaveview' %}active-staff-link{% endif %}" href="{% url 'staff_leave_view' %}"><i class="material-icons">history</i>Leave History</a></li>
+
+       
+    
+
+   
+      <li class="no-padding">
+                    <a class="waves-effect waves-grey" href="{% url 'logout' %}"><i class="material-icons">logout</i>Sign Out</a>
+                </li>  
+                
+     
+       
+    </ul>
+
+
+
+    
+   
+
+
+
+    {% endif %}
+    <div class="footer">
+        <p class="copyright"> SLMS©</p>
+    
+    </div>
+    </div>
+</aside>
