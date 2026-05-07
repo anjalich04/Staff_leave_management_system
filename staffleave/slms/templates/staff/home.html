@@ -4,10 +4,23 @@
 .staff-card { border-radius: 10px; }
 .staff-card .card-content { padding: 22px; }
 .summary-number { margin: 10px 0; font-size: 30px; font-weight: 700; }
-.status-badge { color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.status-badge {
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 132px;
+    white-space: nowrap;
+    text-align: center;
+}
 .table-wrap { overflow-x: auto; }
 table.display.responsive-table th, table.display.responsive-table td { padding: 10px 12px; vertical-align: middle; }
 .staff-page-title { color: #1565c0; margin-bottom: 6px; }
+.middle-content { max-width: 1120px; margin: 0 auto; }
 </style>
 
 <div class="middle-content">
@@ -128,8 +141,10 @@ table.display.responsive-table th, table.display.responsive-table td { padding: 
                                 <span class="status-badge" style="background-color: #f9a825;">Pending</span>
                                 {% elif i.status == 1 %}
                                 <span class="status-badge" style="background-color: #2e7d32;">Approved</span>
-                                {% else %}
+                                {% elif i.status == 2 %}
                                 <span class="status-badge" style="background-color: #c62828;">Rejected</span>
+                                {% else %}
+                                <span class="status-badge" style="background-color: #7a7f89;">Cancelled by Staff</span>
                                 {% endif %}
                             </td>
                         </tr>

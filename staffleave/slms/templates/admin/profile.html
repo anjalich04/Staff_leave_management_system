@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'admin/_styles.html' %}
+
+<div class="admin-shell">
+  <div class="admin-page-head">
+    <div>
+      <h5 class="admin-title">My Profile</h5>
+      <p class="admin-subtitle">Manage your admin account details and password securely.</p>
+    </div>
+  </div>
+
+  <div class="admin-card"><div class="admin-card-content">
+    {% include 'admin/_messages.html' %}
+    <form method="POST" action="{% url 'profile_update' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="admin-form-grid">
+        <div class="admin-field admin-field-half"><label>First Name</label><input type="text" name="first_name" value="{{ user.first_name }}" required></div>
+        <div class="admin-field admin-field-half"><label>Last Name</label><input type="text" name="last_name" value="{{ user.last_name }}" required></div>
+        <div class="admin-field admin-field-half"><label>Email</label><input type="email" name="email" value="{{ user.email }}" readonly></div>
+        <div class="admin-field admin-field-half"><label>Username</label><input type="text" name="username" value="{{ user.username }}" readonly></div>
+        <div class="admin-field admin-field-half"><label>Profile Picture</label><input type="file" name="profile_pic"></div>
+        <div class="admin-field admin-field-half"><label>Current Password</label><input type="password" name="current_password" placeholder="Enter current password"></div>
+        <div class="admin-field admin-field-half"><label>New Password</label><input type="password" name="new_password" placeholder="Enter new password"></div>
+      </div>
+      <button type="submit" class="btn admin-btn" style="margin-top:14px;">Update Profile</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

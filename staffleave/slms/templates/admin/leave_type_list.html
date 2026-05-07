@@ -1,72 +1,41 @@
 {% extends 'base.html' %}
 {% block content %}
-<style>
-.admin-card { border-radius: 10px; }
-.admin-card .card-content { padding: 22px; }
-.admin-page-title { color: #1565c0; padding-top: 10px; padding-left: 10px; }
-.admin-btn-primary { background: #1565c0 !important; }
-.admin-btn-primary:hover { background: #0d47a1 !important; }
-.table-wrap { overflow-x: auto; }
-table.display.responsive-table th, table.display.responsive-table td { padding: 10px 12px; vertical-align: middle; }
-table.display.responsive-table thead th { background: #e3f2fd; color: #0d47a1; }
-table.display.responsive-table tbody tr:hover { background: #f5f9ff; }
-</style>
+{% include 'admin/_styles.html' %}
 
-<main class="mn-inner">
-    <h5 class="admin-page-title">Manage Leave Types</h5>
-    <div class="row">
-        <div class="middle-content">
-            <div class="row no-m-t no-m-b">
-                <div class="col s12 m12 l12">
-                    <div class="card admin-card">
-                        <div class="card-content">
-                            <a href="{% url 'leave_type_add' %}" class="btn admin-btn-primary">Add Leave Type</a>
-                            {% if messages %}
-                            {% for message in messages %}
-                            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="margin-top: 15px;">
-                                {{message}}
-                            </div>
-                            {% endfor %}
-                            {% endif %}
-                            <div class="table-wrap" style="margin-top: 15px;">
-                                <table class="display responsive-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Description</th>
-                                            <th>Status</th>
-                                            <th>Created</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for i in leave_types %}
-                                        <tr>
-                                            <td>{{ i.id }}</td>
-                                            <td>{{ i.name }}</td>
-                                            <td>{{ i.description|default:"-" }}</td>
-                                            <td>{% if i.is_active %}Active{% else %}Inactive{% endif %}</td>
-                                            <td>{{ i.created_at }}</td>
-                                            <td>
-                                                <a href="{% url 'leave_type_edit' i.id %}" class="btn btn-small admin-btn-primary">Edit</a>
-                                                <a href="{% url 'leave_type_delete' i.id %}" class="btn btn-small red">Delete</a>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="6" style="text-align: center;">No leave types found.</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="admin-shell">
+  <div class="admin-page-head">
+    <div>
+      <h5 class="admin-title">Leave Types</h5>
+      <p class="admin-subtitle">Maintain available leave categories for staff requests.</p>
     </div>
-</main>
-{% endblock %}
+    <a href="{% url 'leave_type_add' %}" class="btn admin-btn">Add Leave Type</a>
+  </div>
 
+  <div class="admin-card"><div class="admin-card-content">
+    {% include 'admin/_messages.html' %}
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for i in leave_types %}
+      <tr>
+        <td data-label="ID">{{ i.id }}</td>
+        <td data-label="Name">{{ i.name }}</td>
+        <td data-label="Description">{{ i.description|default:"-" }}</td>
+        <td data-label="Status">{% if i.is_active %}<span class="admin-status admin-status-approved">Active</span>{% else %}<span class="admin-status admin-status-rejected">Inactive</span>{% endif %}</td>
+        <td data-label="Created">{{ i.created_at|date:"M d, Y" }}</td>
+        <td data-label="Action">
+          <a href="{% url 'leave_type_edit' i.id %}" class="btn admin-btn" style="padding:0 12px;">Edit</a>
+          <form method="POST" action="{% url 'leave_type_delete' i.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn red" style="padding:0 12px; border-radius:8px; text-transform:none;">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td data-label="Result" colspan="6">No leave types found.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+</div>
+{% endblock %}

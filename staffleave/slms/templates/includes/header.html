@@ -54,41 +54,9 @@
                     <span class="chapter-title">Staff Leave Management System</span>
                    
                 </div>
-                {% if user.user_type == '1' %}
                 <ul class="right col s9 m3 nav-right-menu">
-                
-                    <li class="hide-on-small-and-down"><a href="javascript:void(0)" data-activates="dropdown1" class="dropdown-button dropdown-right show-on-large"><i class="material-icons">notifications_none</i>
-
-
-                       
                     <li class="hide-on-med-and-up"><a href="javascript:void(0)" class="search-toggle"><i class="material-icons">search</i></a></li>
                 </ul>
-                
-                <ul id="dropdown1" class="dropdown-content notifications-dropdown">
-                    <li class="notificatoins-dropdown-container">
-                        <ul>
-                            <li class="notification-drop-title">Notifications</li>
- 
-                            
-
-                            <li>
-                                {% for i in staff_leave %} 
-                                <a href="{% url 'staff_leave_view_admin' %}">
-                                <div class="notification">
-                                    <div class="notification-icon circle cyan"><i class="material-icons">done</i></div>
-                                    {% if i.status == 0 %}
-                                   
-                                    <div class="notification-text"><p><b>{{i.staff_id.admin.first_name}} {{i.staff_id.admin.last_name}}<br />({{i.staff_id.admin.username}})</b> applied for leave</p></div>
-                                    
-                                    
-                                    {% endif %}
-                                </div>
-                                </a>{% endfor %} 
-                            </li>
-                           
-                           
-                          
-                </ul>{% endif %}
             </div>
         </nav>
     </header>

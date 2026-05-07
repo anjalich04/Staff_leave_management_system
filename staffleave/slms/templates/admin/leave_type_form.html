@@ -1,61 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
-<style>
-.admin-card { border-radius: 10px; }
-.admin-card .card-content { padding: 22px; }
-.admin-page-title { color: #1565c0; padding-top: 10px; padding-left: 10px; }
-.admin-btn-primary { background: #1565c0 !important; }
-.admin-btn-primary:hover { background: #0d47a1 !important; }
-</style>
+{% include 'admin/_styles.html' %}
 
-<main class="mn-inner">
-    <h5 class="admin-page-title">{% if leave_type %}Edit Leave Type{% else %}Add Leave Type{% endif %}</h5>
-    <div class="row">
-        <div class="middle-content">
-            <div class="row no-m-t no-m-b">
-                <div class="col s12 m12 l12">
-                    <div class="card admin-card">
-                        <div class="card-content">
-                            {% if messages %}
-                            {% for message in messages %}
-                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                {{message}}
-                            </div>
-                            {% endfor %}
-                            {% endif %}
-                            <form method="POST">
-                                {% csrf_token %}
-                                <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label">Leave Type Name</label>
-                                    <div class="col-sm-10">
-                                        <input type="text" name="name" class="form-control" required value="{{ leave_type.name|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label">Description</label>
-                                    <div class="col-sm-10">
-                                        <textarea name="description" rows="4" class="form-control">{{ leave_type.description|default:'' }}</textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label">Is Active</label>
-                                    <div class="col-sm-10" style="padding-top: 7px;">
-                                        <input type="checkbox" name="is_active" {% if leave_type %}{% if leave_type.is_active %}checked{% endif %}{% else %}checked{% endif %}>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-10">
-                                        <button type="submit" class="btn admin-btn-primary">{% if leave_type %}Update{% else %}Add{% endif %} Leave Type</button>
-                                        <a href="{% url 'leave_type_list' %}" class="btn grey">Back</a>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="admin-shell">
+  <div class="admin-page-head">
+    <div>
+      <h5 class="admin-title">{% if leave_type %}Edit Leave Type{% else %}Add Leave Type{% endif %}</h5>
+      <p class="admin-subtitle">Define and maintain leave categories with clear descriptions.</p>
     </div>
-</main>
-{% endblock %}
+  </div>
 
+  <div class="admin-card"><div class="admin-card-content">
+    {% include 'admin/_messages.html' %}
+    <form method="POST">
+      {% csrf_token %}
+      <div class="admin-form-grid">
+        <div class="admin-field"><label>Leave Type Name</label><input type="text" name="name" required value="{{ leave_type.name|default:'' }}"></div>
+        <div class="admin-field"><label>Description</label><textarea name="description">{{ leave_type.description|default:'' }}</textarea></div>
+        <div class="admin-field"><label><input type="checkbox" name="is_active" {% if leave_type %}{% if leave_type.is_active %}checked{% endif %}{% else %}checked{% endif %}> Active</label></div>
+      </div>
+      <button type="submit" class="btn admin-btn">{% if leave_type %}Update{% else %}Add{% endif %} Leave Type</button>
+      <a href="{% url 'leave_type_list' %}" class="btn admin-btn-light">Back</a>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

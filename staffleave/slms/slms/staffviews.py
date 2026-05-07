@@ -3,12 +3,16 @@ from slmsapp.EmailBackEnd import EmailBackEnd
 from django.contrib.auth import  logout,login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from slmsapp.models import CustomUser,Staff,Staff_Leave
+from slmsapp.models import CustomUser,Staff,Staff_Leave,LeaveType
 from django.db.models import Q
 from datetime import datetime, date, timedelta
 
 
 MONTHLY_LEAVE_LIMIT = 3
+STATUS_PENDING = 0
+STATUS_APPROVED = 1
+STATUS_REJECTED = 2
+STATUS_CANCELLED = 3
 
 
 def _parse_leave_date(date_string):
@@ -38,7 +42,7 @@ def _count_overlap_days(start_date, end_date, window_start, window_end):
 
 def _approved_days_for_month(staff, month_date):
     month_start, month_end = _month_range(month_date)
-    approved_leaves = Staff_Leave.objects.filter(staff_id=staff.id, status=1)
+    approved_leaves = Staff_Leave.objects.filter(staff_id=staff.id, status=STATUS_APPROVED)
     total_days = 0
 
     for leave in approved_leaves:
@@ -86,9 +90,9 @@ def HOME(request):
         created_at__year=today.year,
         created_at__month=today.month
     )
-    pending_leaves = month_requests.filter(status=0).count()
-    approved_leaves_count = month_requests.filter(status=1).count()
-    rejected_leaves_count = month_requests.filter(status=2).count()
+    pending_leaves = month_requests.filter(status=STATUS_PENDING).count()
+    approved_leaves_count = month_requests.filter(status=STATUS_APPROVED).count()
+    rejected_leaves_count = month_requests.filter(status=STATUS_REJECTED).count()
 
     remaining_leaves = monthly_limit - total_taken_leaves
     if remaining_leaves < 0:
@@ -110,12 +114,14 @@ def HOME(request):
 def STAFF_APPLY_LEAVE(request):
     staff = Staff.objects.get(admin=request.user.id)
     remaining_leaves = max(0, MONTHLY_LEAVE_LIMIT - _approved_days_for_month(staff, date.today()))
+    leave_types = LeaveType.objects.filter(is_active=True).order_by('name')
     context = {
         'monthly_limit': MONTHLY_LEAVE_LIMIT,
         'remaining_leaves': remaining_leaves,
         'limit_message': f'You can take only {MONTHLY_LEAVE_LIMIT} days leave per month',
         'remaining_message': f'You have {remaining_leaves} days remaining this month',
         'today_date': date.today().strftime("%Y-%m-%d"),
+        'leave_types': leave_types,
     }
     return render(request,'staff/apply_leave.html', context)
 
@@ -123,11 +129,20 @@ def STAFF_APPLY_LEAVE(request):
 @login_required(login_url='/')   
 def STAFF_APPLY_LEAVE_SAVE(request):
     if request.method == "POST":
-        leave_type = request.POST.get('leave_type')
+        leave_type = (request.POST.get('leave_type') or '').strip()
         from_date = request.POST.get('from_date')
         to_date = request.POST.get('to_date')
         duration_days = request.POST.get('duration_days')
-        message = request.POST.get('message')
+        message = (request.POST.get('message') or '').strip()
+
+        if not leave_type:
+            messages.error(request, 'Please select a leave type.')
+            return redirect('staff_apply_leave')
+
+        leave_type_exists = LeaveType.objects.filter(name=leave_type, is_active=True).exists()
+        if not leave_type_exists:
+            messages.error(request, 'Selected leave type is not available.')
+            return redirect('staff_apply_leave')
 
         staff = Staff.objects.get(admin=request.user.id)
         start_date = _parse_leave_date(from_date)
@@ -165,7 +180,7 @@ def STAFF_APPLY_LEAVE_SAVE(request):
             messages.error(request, f'Leave Duration should be {expected_duration} day(s) for selected dates.')
             return redirect('staff_apply_leave')
 
-        overlap_exists = Staff_Leave.objects.filter(staff_id=staff.id).exclude(status=2)
+        overlap_exists = Staff_Leave.objects.filter(staff_id=staff.id).exclude(status__in=[STATUS_REJECTED, STATUS_CANCELLED])
         for existing in overlap_exists:
             existing_start = _parse_leave_date(existing.from_date)
             existing_end = _parse_leave_date(existing.to_date)
@@ -195,8 +210,8 @@ def STAFF_APPLY_LEAVE_SAVE(request):
             to_date = to_date,
             duration_days=duration_days,
             message = message,
-
-
+            status=STATUS_PENDING,
+            reject_reason=None,
           )
         leave.save()
         messages.success(request,'Leave apply successfully')
@@ -210,9 +225,10 @@ def STAFF_LEAVE_VIEW(request):
     history_qs = Staff_Leave.objects.filter(staff_id=staff.id).order_by('-created_at')
 
     status_map = {
-        'pending': 0,
-        'approved': 1,
-        'rejected': 2,
+        'pending': STATUS_PENDING,
+        'approved': STATUS_APPROVED,
+        'rejected': STATUS_REJECTED,
+        'cancelled': STATUS_CANCELLED,
     }
     if status_filter in status_map:
         history_qs = history_qs.filter(status=status_map[status_filter])
@@ -226,9 +242,30 @@ def STAFF_LEAVE_VIEW(request):
         duration_days = 0
         if start_date and end_date and end_date >= start_date:
             duration_days = (end_date - start_date).days + 1
+        if leave.status == STATUS_PENDING:
+            status_label = 'Pending'
+            status_class = 'status-pending'
+            tracking_state = 'pending'
+        elif leave.status == STATUS_APPROVED:
+            status_label = 'Approved'
+            status_class = 'status-approved'
+            tracking_state = 'approved'
+        elif leave.status == STATUS_REJECTED:
+            status_label = 'Rejected'
+            status_class = 'status-rejected'
+            tracking_state = 'rejected'
+        else:
+            status_label = 'Cancelled by Staff'
+            status_class = 'status-cancelled'
+            tracking_state = 'cancelled'
+
         leave_records.append({
             'leave': leave,
             'duration_days': duration_days,
+            'status_label': status_label,
+            'status_class': status_class,
+            'tracking_state': tracking_state,
+            'can_cancel': leave.status == STATUS_PENDING,
         })
 
     context = {
@@ -236,3 +273,27 @@ def STAFF_LEAVE_VIEW(request):
         'status_filter': status_filter,
     }
     return render(request,'staff/leave_history.html',context)
+
+
+@login_required(login_url='/')
+def STAFF_CANCEL_LEAVE(request, id):
+    if request.method != "POST":
+        messages.error(request, 'Invalid request method.')
+        return redirect('staff_leave_view')
+
+    staff = Staff.objects.get(admin=request.user.id)
+    leave = Staff_Leave.objects.filter(id=id, staff_id=staff.id).first()
+
+    if not leave:
+        messages.error(request, 'Leave request not found.')
+        return redirect('staff_leave_view')
+
+    if leave.status != STATUS_PENDING:
+        messages.error(request, 'Only pending leave requests can be cancelled.')
+        return redirect('staff_leave_view')
+
+    leave.status = STATUS_CANCELLED
+    leave.reject_reason = None
+    leave.save()
+    messages.success(request, 'Leave request cancelled successfully.')
+    return redirect('staff_leave_view')

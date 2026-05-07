@@ -36,6 +36,7 @@ urlpatterns = [
     path('Staff/Apply_Leave', staffviews.STAFF_APPLY_LEAVE, name='staff_apply_leave'),
     path('Staff/Apply_Leave_save', staffviews.STAFF_APPLY_LEAVE_SAVE, name='staff_apply_leave_save'),
     path('Staff/Leaveview',staffviews.STAFF_LEAVE_VIEW,name='staff_leave_view'),
+    path('Staff/Leave/Cancel/<str:id>', staffviews.STAFF_CANCEL_LEAVE, name='staff_cancel_leave'),
     
     
     #profile path

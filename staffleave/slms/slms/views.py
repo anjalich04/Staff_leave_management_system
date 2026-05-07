@@ -49,13 +49,15 @@ def doLogout(request):
 def INDEX(request):
      return render(request,'index.html')
 
-login_required(login_url='/')
+@login_required(login_url='/')
 def PROFILE(request):
-    user = CustomUser.objects.get(id = request.user.id)
+    user = CustomUser.objects.get(id=request.user.id)
     context = {
-        "user":user,
+        "user": user,
     }
-    return render(request,'profile.html',context)
+    if user.user_type == '1':
+        return render(request, 'admin/profile.html', context)
+    return render(request, 'profile.html', context)
 @login_required(login_url = '/')
 def PROFILE_UPDATE(request):
     if request.method == "POST":

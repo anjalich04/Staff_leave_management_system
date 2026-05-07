@@ -9,11 +9,18 @@ from django.db.models import Q
 
 @login_required(login_url='/')
 def HOME(request):
-    staff_count = Staff.objects.all().count()
-    leave_count = Staff_Leave.objects.all().count()
-    context ={
-        'staff_count':staff_count,
-        'leave_count':leave_count,
+    staff_count = Staff.objects.count()
+    leave_qs = Staff_Leave.objects.all()
+    leave_count = leave_qs.count()
+    pending_count = leave_qs.filter(status=0).count()
+    approved_count = leave_qs.filter(status=1).count()
+    rejected_count = leave_qs.filter(status=2).count()
+    context = {
+        'staff_count': staff_count,
+        'leave_count': leave_count,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
     }
     return render(request,'admin/home.html',context)
 
@@ -53,7 +60,7 @@ def ADD_STAFF(request):
     return render(request,'admin/add_staff.html')
 
 def VIEW_STAFF(request):
-    staff = Staff.objects.all()
+    staff = Staff.objects.select_related('admin').all().order_by('-created_at')
     context = {
         "staff":staff,
     }
@@ -106,7 +113,7 @@ def DELETE_STAFF(request,admin):
 
 
 def STAFF_LEAVE_VIEW(request):
-    staff_leave = Staff_Leave.objects.all()
+    staff_leave = Staff_Leave.objects.select_related('staff_id__admin').all().order_by('-created_at')
     context = {
         "staff_leave":staff_leave,
     }
@@ -139,12 +146,6 @@ def STAFF_DISAPPROVE_LEAVE(request,id):
 
 @login_required(login_url='/')
 def LEAVE_TYPE_LIST(request):
-    existing_leave_types = Staff_Leave.objects.values_list('leave_type', flat=True).distinct()
-    for name in existing_leave_types:
-        clean_name = (name or '').strip()
-        if clean_name:
-            LeaveType.objects.get_or_create(name=clean_name, defaults={'is_active': True})
-
     leave_types = LeaveType.objects.all().order_by('-created_at')
     context = {
         "leave_types": leave_types,
@@ -208,6 +209,10 @@ def LEAVE_TYPE_EDIT(request, id):
 
 @login_required(login_url='/')
 def LEAVE_TYPE_DELETE(request, id):
+    if request.method != "POST":
+        messages.error(request, 'Invalid request method for delete.')
+        return redirect('leave_type_list')
+
     leave_type = LeaveType.objects.get(id=id)
     leave_type.delete()
     messages.success(request, 'Leave type deleted successfully.')

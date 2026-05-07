@@ -1,121 +1,211 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-.staff-card { border-radius: 10px; }
-.staff-card .card-content { padding: 24px; }
-.status-badge { color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-.table-wrap { overflow-x: auto; }
-table.display.responsive-table th, table.display.responsive-table td { padding: 10px 12px; vertical-align: middle; }
-.staff-page-title { color: #1565c0; padding-top: 10px; padding-left: 10px; }
-.staff-btn-primary { background-color: #1565c0 !important; }
-.staff-btn-primary:hover { background-color: #0d47a1 !important; }
+:root {
+  --staff-blue-900: #0b3b91;
+  --staff-blue-700: #1565c0;
+  --staff-border: #d7e4fa;
+  --staff-muted: #5f7196;
+  --status-approved: #1f8f4c;
+  --status-rejected: #c62828;
+  --status-pending: #f1a317;
+  --status-cancelled: #7a7f89;
+}
+
+.staff-shell {
+  display: flex;
+  justify-content: center;
+  padding: 20px 12px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.staff-wrap {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.staff-title { margin: 0 0 6px; color: var(--staff-blue-900); font-size: 1.6rem; font-weight: 700; text-align: center; }
+.staff-subtitle { margin: 0 0 14px; color: var(--staff-muted); text-align: center; }
+
+.staff-card {
+  background: #fff;
+  border: 1px solid var(--staff-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(21, 101, 192, 0.08);
+  margin-bottom: 14px;
+}
+
+.staff-card-content { padding: 18px; }
+
+.staff-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.staff-field { grid-column: span 4; }
+.staff-field label { display:block; margin-bottom:6px; color:#183161; font-weight:600; }
+.staff-field select { width:100%; border:1px solid #cadbf8; border-radius:8px; padding:9px 12px; box-sizing:border-box; }
+
+.staff-btn {
+  background: var(--staff-blue-700) !important;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 700;
+}
+
+.staff-btn:hover { background: var(--staff-blue-900) !important; }
+
+.staff-table { width:100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.staff-table thead th {
+  background: #edf4ff;
+  color: var(--staff-blue-900);
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--staff-border);
+}
+
+.staff-table tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #edf2ff;
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+.status-badge {
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.status-approved { background: var(--status-approved); }
+.status-rejected { background: var(--status-rejected); }
+.status-pending { background: var(--status-pending); color: #253040; }
+.status-cancelled { background: var(--status-cancelled); }
+
+.cancel-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #4f5661;
+  text-decoration: underline;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.muted { color: #7b879b; }
+
+@media (max-width: 980px) {
+  .staff-wrap { max-width: 100%; }
+  .staff-field { grid-column: span 12; }
+  .staff-table, .staff-table thead, .staff-table tbody, .staff-table th, .staff-table td, .staff-table tr { display:block; }
+  .staff-table thead { display:none; }
+  .staff-table tbody tr {
+    border: 1px solid var(--staff-border);
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .staff-table tbody td { border: 0; padding: 6px 4px; }
+  .staff-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--staff-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+}
 </style>
 
 <main class="mn-inner">
-    <h5 class="staff-page-title">View Leave History</h5>
-    <div class="row">
-        <div class="middle-content">
-            <div class="row no-m-t no-m-b">
-                <div class="col s12 m12 l12">
-                    <div class="card invoices-card staff-card">
-                        <div class="card-content">
-                            <span class="card-title">Leave History</span>
-                            <form method="GET" action="{% url 'staff_leave_view' %}">
-                                <div class="row" style="margin-bottom: 0;">
-                                    <div class="col s12 m6 l4">
-                                        <label>Status Filter</label>
-                                        <select class="form-control" name="status">
-                                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
-                                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                                            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
-                                            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-                                        </select>
-                                    </div>
-                                    <div class="col s12 m6 l4" style="padding-top: 25px;">
-                                        <button type="submit" class="btn staff-btn-primary">Apply Filter</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="staff-shell">
+    <div class="staff-wrap">
+      <h5 class="staff-title">Leave History</h5>
+      <p class="staff-subtitle">Simple tracking of your leave requests and status updates.</p>
 
-            <div class="row no-m-t no-m-b">
-                <div class="col s12 m12 l12">
-                    <div class="card invoices-card staff-card">
-                        <div class="card-content">
-                            {% if messages %}
-                            {% for message in messages %}
-                             {% if message.tags == 'error' %}
-                           <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                          {{message}}
-                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                         <span aria-hidden="true">&times;</span>
-                             </button>
-                              </div>
-                           {% endif %}
-                            {% endfor %}
-                           {% endif %}
-                               {% if messages %}
-                            {% for message in messages %}
-                             {% if message.tags == 'success' %}
-                           <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                          {{message}}
-                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                         <span aria-hidden="true">&times;</span>
-                             </button>
-                              </div>
-                           {% endif %}
-                            {% endfor %}
-                           {% endif %}
-                       <div class="table-wrap">
-                       <table class="display responsive-table">
-                        <thead>
-                            <tr>
-                                <th>Leave Type</th>
-                                <th>Date Range</th>
-                                <th>Days</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                     
-                        <tbody>
-                            {% for record in leave_records %}
-                            {% with i=record.leave %}
- 
-                            <tr>
-                                <td>{{i.leave_type}}</td>
-                                <td>{{i.from_date}} → {{i.to_date}}</td>
-                                <td>{{record.duration_days}}</td>
-                                <td>
-                                    {% if i.status == 0 %}
-                                    <span class="status-badge" style="background-color: #f9a825;">Pending</span>
-                                    {% elif i.status == 1 %}
-                                    <span class="status-badge" style="background-color: #2e7d32;">Approved</span>
-                                    {% else %}
-                                    <span class="status-badge" style="background-color: #c62828;">Rejected</span>
-                                    <div style="margin-top:6px; color:#c62828; font-size:12px;">
-                                        Rejection Reason: {{ i.reject_reason|default:"-" }}
-                                    </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endwith %}
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" style="text-align: center;">No leave records found.</td>
-                            </tr>
-                            {% endfor %}  
-                        </tbody>
-                    </table>
-                    </div>
-                        </div>
-                    </div>
-                </div>
+      <div class="staff-card">
+        <div class="staff-card-content">
+          <form method="GET" action="{% url 'staff_leave_view' %}">
+            <div class="staff-filter-grid">
+              <div class="staff-field">
+                <label>Status Filter</label>
+                <select name="status">
+                  <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                  <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                  <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                  <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+              </div>
+              <div class="staff-field"><button type="submit" class="btn staff-btn">Apply Filter</button></div>
             </div>
+          </form>
         </div>
-    </div>
-</main>
+      </div>
 
+      <div class="staff-card">
+        <div class="staff-card-content">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert" style="margin-bottom:10px;">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <table class="staff-table">
+            <thead>
+              <tr>
+                <th>Leave Type</th>
+                <th>Date Range</th>
+                <th>Status</th>
+                <th>Rejection Message (Admin)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in leave_records %}
+              {% with i=record.leave %}
+              <tr>
+                <td data-label="Leave Type">{{ i.leave_type }}</td>
+                <td data-label="Date Range">{{ i.from_date }} to {{ i.to_date }}</td>
+                <td data-label="Status">
+                  <span class="status-badge {{ record.status_class }}">{{ record.status_label }}</span>
+                  {% if record.can_cancel %}
+                  <form method="POST" action="{% url 'staff_cancel_leave' i.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cancel-link">Action: Cancel Request</button>
+                  </form>
+                  {% endif %}
+                </td>
+                <td data-label="Rejection Message (Admin)">{% if i.status == 2 %}{{ i.reject_reason|default:'-' }}{% else %}-{% endif %}</td>
+              </tr>
+              {% endwith %}
+              {% empty %}
+              <tr><td data-label="Result" colspan="4" style="text-align:center;">No leave records found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
 {% endblock %}
